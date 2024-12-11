@@ -1,4 +1,3 @@
-Sidebar
 <div class="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo">
@@ -14,10 +13,17 @@ Sidebar
     <li><i class="fas fa-clock"></i><span>Feedback</span></li>
     <li><i class="fas fa-thumbs-up"></i><span>Reports</span></li>
   </ul>
+  
+  <!-- Logout Button -->
+  <div class="sidebar-logout">
+    <form action="/auth/logout" method="POST">
+      <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </form>
+  </div>
+  
   <div class="sidebar-social-media">
     <i class="fa-brands fa-facebook"></i>
     <i class="fa-brands fa-twitter"></i>
     <i class="fa-brands fa-instagram"></i>
   </div>
-  
 </div>
