@@ -26,7 +26,16 @@ router.get("/mentorList", isLoggedIn, isMentee, menteeController.displayMentorLi
 // Connection routes
 router.get("/connections", isLoggedIn, isMentee, menteeController.displayAllConnections);
 router.post("/connections/:mentorId/connectRequest", isLoggedIn, isMentee, menteeController.connectRequest);
+router.get(
+  "/connections/:mentorId/disconnect",
+  isLoggedIn,
+  isMentee,
+  menteeController.disconnect
+);
 router.delete("/connections/:mentorId/cancelRequest", isLoggedIn, isMentee, menteeController.cancelRequest);
+router.get("/mentors/:mentorId", isLoggedIn, menteeController.viewMentorProfile);
+
+
 
 // scheduling
 router.get("/schedule/:mentorUserId", isLoggedIn, isMentee, menteeController.renderParticularMentorScheduleForMentee);
