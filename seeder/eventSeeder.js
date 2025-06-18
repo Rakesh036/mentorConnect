@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
-const Event = require("./models/event");
-const User = require("./models/user");
-const Group = require("./models/group");
-const Donation = require("./models/donation");
+const Event = require("../models/event");
+const User = require("../models/user");
+const Group = require("../models/group");
+const Donation = require("../models/donation");
 
 const seedEvents = async () => {
   try {

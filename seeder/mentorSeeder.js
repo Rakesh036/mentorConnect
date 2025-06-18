@@ -91,8 +91,10 @@ const mentors = [
 
 const seedMentors = async () => {
   try {
+    console.log('try to seed mentor...');
     await User.deleteMany({ role: "mentor" }); // Clear existing mentor users
-    await Mentor.deleteMany(); // Clear existing mentor records
+    console.log('user who are mentor was deleted successfully');
+    await Mentor.deleteMany({}); // Clear existing mentor records
     console.log("Existing mentors removed.");
 
     for (const mentorData of mentors) {

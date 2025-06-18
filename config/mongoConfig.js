@@ -6,7 +6,12 @@ const connectToDatabase = async () => {
   try {
     await mongoose.connect(MONGO_URL); 
 
-    console.log("Connected to MongoDB and mongo_URL is:", MONGO_URL);
+    // console.log("Connected to MongoDB");
+    if (MONGO_URL.match("mongodb://127")) {
+      console.log('mongodb connected to local');
+    } else {
+      console.log('mongodb connected to mongo atlas');
+    }
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
     process.exit(1); // Exit the application if the database connection fails
