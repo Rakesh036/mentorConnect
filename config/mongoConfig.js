@@ -4,6 +4,7 @@ const connectToDatabase = async () => {
   const MONGO_URL =
     process.env.MONGODB_URL || "mongodb://127.0.0.1:27017/mentorConnect20";
   try {
+    console.log('mongo url: ', MONGO_URL);
     await mongoose.connect(MONGO_URL); 
 
     // console.log("Connected to MongoDB");

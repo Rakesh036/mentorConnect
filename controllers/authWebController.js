@@ -1,56 +1,81 @@
-const { log } = require("console");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
 const userService = require("../services/userService");
 
 module.exports.register = async (req, res) => {
   try {
     const { username, password, email, role } = req.body;
 
-    // Call userService for registration
-    const { user } = await userService.register({ username, password, email, role });
+    const { user, token } = await userService.register({
+      username,
+      password,
+      email,
+      role,
+    });
 
-    req.login(user, (err) => {
-      if (err) throw new Error("Login failed");
-      req.flash("success", `Welcome! ${user.username}`);
-      res.redirect(`/${role}`);
+    res.status(201).json({
+      success: true,
+      message: `Welcome ${user.username}!`,
+      token,                        // ✅ Send JWT
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (error) {
-    req.flash("error", error.message);
-    res.redirect("/register");
+    res.status(400).json({
+      success: false,
+      message: error.message || "Registration failed",
+    });
   }
 };
 
-
-module.exports.forgetPassword = async (req, res) => {
-
+module.exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    // console.log(username, password);
-    // console.log("password", password);
-    
+    const { email, password } = req.body;
 
-    // Call userService to reset the password
-    await userService.resetPassword(username, password);
+    // ✅ Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email or password" });
+    }
 
-    req.flash("success", "Password has been reset successfully.");
-    res.redirect("/auth/login");
+    // ✅ Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email or password" });
+    }
+
+    // ✅ issue JWT token
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Welcome back ${user.username}!`,
+      token,
+      redirectTo: `/${user.role}`,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (error) {
-    req.flash("error", error.message);
-    res.redirect("/auth/forgetPassword");
+    res.status(500).json({
+      success: false,
+      message: "Login failed",
+    });
   }
 };
-
-module.exports.login = (req, res) => {
-  const redirectUrl = `/${req.user.role}`;
-  req.flash("success", "Welcome back!");
-  res.redirect(redirectUrl);
-};
-
-module.exports.logout = (req, res) => {
-  req.logout((err) => {
-    if (err) return next(err);
-    req.flash("success", "Logged out successfully.");
-    res.redirect("/");
-  });
-};
-
-

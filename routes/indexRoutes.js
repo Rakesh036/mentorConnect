@@ -2,6 +2,10 @@
 const express = require("express");
 const router = express.Router();
 
+// API Routes (for Next.js frontend)
+// router.use("/api", require("./apiRoutes"));
+
+// Web Routes (keep existing for gradual migration)
 router.use("/auth", require("./authWebRoutes"));
 router.use("/mentor", require("./mentorWebRoutes"));
 router.use("/chat", require("./chatRoutes"));

@@ -4,84 +4,61 @@ process.on("unhandledRejection", (reason, promise) => {
   process.exit(1);
 });
 
-// Environment Configuration
+// Load .env in development
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
 
 // Imports
 const express = require("express");
-const flash = require("connect-flash");
-const passport = require("passport");
-const LocalStrategy = require("passport-local");
-const path = require("path");
-const ejsMate = require("ejs-mate");
-const methodOverride = require("method-override");
 const http = require("http");
 const socketIo = require("socket.io");
-// const mongoose = require("mongoose");
+const cors = require("cors");
 const session = require("express-session");
 
-// Configurations and Services
+// Configurations + services
 const connectToDatabase = require("./config/mongoConfig");
-const sessionConfig = require("./config/sessionConfig");
-// const uploadService = require("./services/uploadService");
-const flashConfig = require("./config/flashConfig");
 const errorHandler = require("./middlewares/errorHandler");
 const routes = require("./routes/indexRoutes");
 
-// MongoDB Connection
+// DB Connection
 connectToDatabase();
 
 // Models
 const User = require("./models/user");
 
-// Express App Initialization
+// Express Setup
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Express Configuration
-app.engine("ejs", ejsMate);
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-
-app.use(express.static(path.join(__dirname, "public")));
-app.use(express.urlencoded({ extended: true }));
-app.use(methodOverride("_method"));
-app.use(express.json());
+// ✅ CORS configuration for Next.js frontend
 app.use(
-  session(sessionConfig(process.env.MONGODB_URL, process.env.SESSION_SECRET))
+  cors()
 );
-app.use(flash());
 
-// Passport Configuration
-app.use(passport.initialize());
-app.use(passport.session());
-passport.use(new LocalStrategy(User.authenticate()));
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+// ✅ Required: handle preflight correctly
+app.options("*", cors());
 
-// Middleware for Flash Messages
-app.use(flashConfig);
 
-// Routes
-app.use(routes);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Landing Page Route
-app.get("/", (req, res) => {
-  if (req.isAuthenticated()) {
-    return res.redirect(`/${req.user.role}`);
-  }
-  res.render("common/landingPage", { cssFile: "common/landingPage.css" });
+
+// ✅ Backend Root Route (Next.js handles `/`)
+app.use("/", (req, res, next) => {
+  // console.log("status: ✅ Backend running at: ",  process.env.NODE_ENV );
+  console.log('req received at: ', req.url);
+  next();
 });
 
+// Routes (API only, no rendering)
+app.use(routes);
 
+// Chat enable API (unchanged)
+const Booking = require("./models/bookingModel");
 
-// Route to check if the chat is enabled
-const Booking = require('./models/bookingModel');
-
-app.get('/chat-enabled/:mentorId/:menteeId', async (req, res) => {
+app.get("/chat-enabled/:mentorId/:menteeId", async (req, res) => {
   const { mentorId, menteeId } = req.params;
 
   const now = new Date();
@@ -93,24 +70,23 @@ app.get('/chat-enabled/:mentorId/:menteeId', async (req, res) => {
     "schedule.end": { $gte: now },
   });
 
-  res.json({ chatEnabled: !!booking }); // Return true if a valid booking is found
+  res.json({ chatEnabled: !!booking });
 });
 
-
-app.get("*", (req, res) => {
-  res.status(404).send("Page Not Found");
+// 404 fallback (for APIs)
+app.use((req, res) => {
+  res.status(404).json({ error: "API route not found" });
 });
 
-// Error Handling Middleware
-app.use(errorHandler);
+// Error handler middleware
+// app.use(errorHandler);
 
-// Real-Time Chat Integration
+// Socket.io Chat integration
 const chatServer = require("./chatServer");
-const { log } = require("console");
 chatServer(io);
 
-// Server Listener
-const PORT = process.env.PORT || 3000;
+// Start Server
+const PORT = process.env.PORT || 5003;
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`🚀 Backend running on port ${PORT}`);
 });
